@@ -241,7 +241,8 @@ button {
   padding: 18px 20px 20px;
 }
 
-.card h2 {
+.card h2,
+.card h3 {
   font-size: 1.12rem;
   line-height: 1.35;
 }
@@ -431,6 +432,64 @@ mark {
   border-radius: 3px;
   background: rgba(224, 187, 112, .28);
   color: inherit;
+}
+
+/* ---------- Resultados de búsqueda ---------- */
+
+.grupo + .grupo {
+  margin-top: 34px;
+}
+
+.group-title {
+  margin-top: 28px;
+  font-size: 1.35rem;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  display: block;
+  padding: 16px 19px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color .2s, transform .2s;
+}
+
+.result:hover {
+  transform: translateX(3px);
+  border-color: var(--accent);
+}
+
+.result-meta {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--gold);
+  font: 700 .72rem system-ui, sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.result-title {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.result-snippet {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font: .9rem/1.6 system-ui, sans-serif;
 }
 
 /* ---------- Accesibilidad ---------- */

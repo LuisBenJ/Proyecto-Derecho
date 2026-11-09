@@ -31,27 +31,107 @@ function setTitulo(texto) {
 function resaltar(texto, termino) {
   if (!termino) return esc(texto);
 
-  const indice = texto.toLowerCase().indexOf(termino.toLowerCase());
-  if (indice === -1) return esc(texto);
+  const original = String(texto);
+  const objetivo = termino.toLowerCase();
+  const base = original.toLowerCase();
 
-  const fin = indice + termino.length;
+  let resultado = "";
+  let desde = 0;
+  let indice = base.indexOf(objetivo);
 
-  return (
-    esc(texto.slice(0, indice)) +
-    `<mark>${esc(texto.slice(indice, fin))}</mark>` +
-    esc(texto.slice(fin))
-  );
+  if (indice === -1) return esc(original);
+
+  while (indice !== -1) {
+    resultado += esc(original.slice(desde, indice));
+    resultado += `<mark>${esc(original.slice(indice, indice + objetivo.length))}</mark>`;
+    desde = indice + objetivo.length;
+    indice = base.indexOf(objetivo, desde);
+  }
+
+  return resultado + esc(original.slice(desde));
 }
 
-function contenidoBuscable(unidad) {
+function snippet(texto, termino, radio = 70) {
+  const original = String(texto);
+  const indice = termino
+    ? original.toLowerCase().indexOf(termino.toLowerCase())
+    : -1;
+
+  if (indice === -1) {
+    const recorte = original.slice(0, 140);
+    return esc(recorte) + (original.length > 140 ? "…" : "");
+  }
+
+  const inicio = Math.max(0, indice - radio);
+  const fin = Math.min(original.length, indice + termino.length + radio);
+
+  const prefijo = inicio > 0 ? "…" : "";
+  const sufijo = fin < original.length ? "…" : "";
+
+  return prefijo + resaltar(original.slice(inicio, fin), termino) + sufijo;
+}
+
+function textoUnidad(unidad) {
   return [
     unidad.t,
     unidad.d,
     unidad.main_title,
     ...unidad.main,
-    ...unidad.keys.flat(),
-    ...unidad.s.flat()
+    ...unidad.keys.flat()
   ].join(" ").toLowerCase();
+}
+
+let INDICE_SUBTEMAS = [];
+
+function construirIndice() {
+  INDICE_SUBTEMAS = UNIDADES.flatMap((unidad) =>
+    unidad.s.map(([titulo, descripcion], index) => ({
+      unidad,
+      numero: unidad.n,
+      indice: index + 1,
+      titulo,
+      descripcion,
+      texto: `${titulo} ${descripcion}`.toLowerCase()
+    }))
+  );
+}
+
+function resumen(nSubtemas, nUnidades) {
+  const partes = [];
+
+  if (nSubtemas) {
+    partes.push(`${nSubtemas} ${nSubtemas === 1 ? "subtema" : "subtemas"}`);
+  }
+
+  if (nUnidades) {
+    partes.push(`${nUnidades} ${nUnidades === 1 ? "unidad" : "unidades"}`);
+  }
+
+  return partes.join(" · ");
+}
+
+function tarjetaUnidad(unidad, termino, nivel = 2) {
+  return `
+    <a class="card" href="#u${unidad.n}">
+      <img src="${esc(unidad.image)}" alt="Ilustración de ${esc(unidad.t)}" loading="lazy">
+      <div class="card-body">
+        <h${nivel}>Unidad ${unidad.n}. ${resaltar(unidad.t, termino)}</h${nivel}>
+        <small>${resaltar(unidad.h, termino)}</small>
+      </div>
+    </a>
+  `;
+}
+
+function resultadoSubtema(item, termino) {
+  return `
+    <li>
+      <a class="result" href="#u${item.numero}-${item.indice}">
+        <span class="result-meta">Unidad ${item.numero} · ${esc(item.unidad.t)}</span>
+        <strong class="result-title">${item.numero}.${item.indice} ${resaltar(item.titulo, termino)}</strong>
+        <span class="result-snippet">${snippet(item.descripcion, termino)}</span>
+      </a>
+    </li>
+  `;
 }
 
 function enfocarTitulo() {
@@ -106,8 +186,8 @@ function mostrarLista(filtro = "") {
         id="buscador"
         class="search"
         type="search"
-        placeholder="Buscar una unidad o concepto..."
-        aria-label="Buscar una unidad o concepto"
+        placeholder="Buscar un subtema o concepto..."
+        aria-label="Buscar un subtema o concepto"
         value="${esc(filtro)}"
       >
     </div>
@@ -117,43 +197,74 @@ function mostrarLista(filtro = "") {
         <div class="tag">Contenido de la materia</div>
         <h1 class="page-title">Temas de interés</h1>
         <p class="lead">
-          Selecciona una unidad para estudiar primero la idea principal y
-          después sus subtemas.
+          Busca un concepto para ir directo al subtema que lo explica, o
+          selecciona una unidad para estudiar la idea principal y sus subtemas.
         </p>
       </header>
 
       <p class="result-count" id="result-count" aria-live="polite"></p>
 
-      <div class="grid" id="grid"></div>
+      <div id="resultados"></div>
     </div>
   `;
 
   const buscador = document.getElementById("buscador");
-  const grid = document.getElementById("grid");
+  const resultados = document.getElementById("resultados");
   const contador = document.getElementById("result-count");
 
   function renderResultados(valor) {
     const termino = valor.trim().toLowerCase();
-    const resultados = UNIDADES.filter((unidad) =>
-      contenidoBuscable(unidad).includes(termino)
+
+    if (!termino) {
+      contador.textContent = "";
+      resultados.innerHTML = `
+        <div class="grid">
+          ${UNIDADES.map((unidad) => tarjetaUnidad(unidad, "")).join("")}
+        </div>
+      `;
+      return;
+    }
+
+    const subtemas = INDICE_SUBTEMAS.filter((item) => item.texto.includes(termino));
+    const unidades = UNIDADES.filter((unidad) =>
+      textoUnidad(unidad).includes(termino)
     );
 
-    contador.textContent =
-      resultados.length === 1
-        ? "1 unidad encontrada"
-        : `${resultados.length} unidades encontradas`;
+    contador.textContent = resumen(subtemas.length, unidades.length);
 
-    grid.innerHTML = resultados.length
-      ? resultados.map((unidad) => `
-          <a class="card" href="#u${unidad.n}">
-            <img src="${esc(unidad.image)}" alt="Ilustración de ${esc(unidad.t)}" loading="lazy">
-            <div class="card-body">
-              <h2>Unidad ${unidad.n}. ${resaltar(unidad.t, termino)}</h2>
-              <small>${resaltar(unidad.h, termino)}</small>
-            </div>
-          </a>
-        `).join("")
-      : `<p class="empty">No se encontraron coincidencias.</p>`;
+    if (!subtemas.length && !unidades.length) {
+      contador.textContent = "Sin resultados";
+      resultados.innerHTML = `<p class="empty">No se encontraron coincidencias.</p>`;
+      return;
+    }
+
+    resultados.innerHTML = `
+      ${
+        subtemas.length
+          ? `
+            <section class="grupo" aria-labelledby="grupo-subtemas">
+              <h2 class="group-title" id="grupo-subtemas">Subtemas</h2>
+              <ul class="results">
+                ${subtemas.map((item) => resultadoSubtema(item, termino)).join("")}
+              </ul>
+            </section>
+          `
+          : ""
+      }
+
+      ${
+        unidades.length
+          ? `
+            <section class="grupo" aria-labelledby="grupo-unidades">
+              <h2 class="group-title" id="grupo-unidades">Unidades</h2>
+              <div class="grid">
+                ${unidades.map((unidad) => tarjetaUnidad(unidad, termino, 3)).join("")}
+              </div>
+            </section>
+          `
+          : ""
+      }
+    `;
   }
 
   renderResultados(filtro);
@@ -335,6 +446,8 @@ function iniciar() {
     `;
     return;
   }
+
+  construirIndice();
 
   window.addEventListener("hashchange", manejarRuta);
   manejarRuta();
