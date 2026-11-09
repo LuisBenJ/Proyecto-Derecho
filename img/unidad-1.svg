@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Unidad 1 — Nociones del Derecho Informático</title>
+  <desc id="desc">Balanza jurídica conectada con una computadora</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3478df"/>
+      <stop offset="100%" stop-color="#102f74"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".20"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="600" rx="28" fill="url(#bg)"/>
+  <circle cx="930" cy="120" r="240" fill="url(#glow)"/>
+  <circle cx="260" cy="530" r="230" fill="#fff" opacity=".035"/>
+  <g fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="3">
+    <path d="M0 115h220l65 65h170"/>
+    <path d="M1200 465H980l-65-65H760"/>
+    <path d="M70 500h150"/>
+    <path d="M990 95h140"/>
+    <circle cx="285" cy="180" r="7"/>
+    <circle cx="915" cy="400" r="7"/>
+  </g>
+  <g transform="translate(590 300)" filter="url(#shadow)" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0-155v310"/>
+      <path d="M-190-95h380"/>
+      <path d="M-190-95l-62 115h124z"/>
+      <path d="M190-95l-62 115h124z"/>
+      <path d="M-55 155h110"/>
+      <rect x="-95" y="35" width="190" height="105" rx="14"/>
+      <path d="M-60 165h120"/>
+      <circle cx="0" cy="82" r="8" fill="#fff" stroke="none"/>
+    </g>
+    <g transform="translate(590 300)" fill="none" stroke="#9fd0ff" stroke-width="4" opacity=".55">
+      <path d="M-340-210h110v55h-110z"/>
+      <path d="M-315-190h60M-315-172h45"/>
+      <path d="M230 130h110v55H230z"/>
+    </g>
+    <text x="72" y="540" fill="#fff" font-family="system-ui" font-size="26" font-weight="600" opacity=".88">DERECHO + TECNOLOGÍA</text>
+  <g fill="#fff" opacity=".9">
+    <rect x="70" y="55" width="6" height="90" rx="3"/>
+    <rect x="70" y="139" width="70" height="6" rx="3"/>
+  </g>
+</svg>

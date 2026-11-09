@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Unidad 5 — Contratos Informáticos</title>
+  <desc id="desc">Contrato digital con firma</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#376fd1"/>
+      <stop offset="100%" stop-color="#182e68"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".20"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="600" rx="28" fill="url(#bg)"/>
+  <circle cx="930" cy="120" r="240" fill="url(#glow)"/>
+  <circle cx="260" cy="530" r="230" fill="#fff" opacity=".035"/>
+  <g fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="3">
+    <path d="M0 115h220l65 65h170"/>
+    <path d="M1200 465H980l-65-65H760"/>
+    <path d="M70 500h150"/>
+    <path d="M990 95h140"/>
+    <circle cx="285" cy="180" r="7"/>
+    <circle cx="915" cy="400" r="7"/>
+  </g>
+  <g transform="translate(600 300)" filter="url(#shadow)">
+      <rect x="-210" y="-165" width="420" height="300" rx="20" fill="#fff" opacity=".93"/>
+      <g stroke="#244d9b" stroke-width="9" stroke-linecap="round">
+        <path d="M-155-105h190"/>
+        <path d="M-155-55h270"/>
+        <path d="M-155-5h220"/>
+        <path d="M-155 45h130"/>
+      </g>
+      <path d="M20 65c50-85 110-75 80-20-20 36-76 40-112 66" fill="none" stroke="#285db4" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="125" cy="90" r="42" fill="#6aa8ff" opacity=".3"/>
+      <path d="M102 90l18 18 32-36" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <g fill="none" stroke="#9fd0ff" stroke-width="4" opacity=".55">
+      <path d="M180 145h-80v-70"/>
+      <path d="M920 410h90v-70"/>
+    </g>
+    <text x="72" y="540" fill="#fff" font-family="system-ui" font-size="26" font-weight="600" opacity=".88">ACUERDOS · OBLIGACIONES · RESPONSABILIDAD</text>
+  <g fill="#fff" opacity=".9">
+    <rect x="70" y="55" width="6" height="90" rx="3"/>
+    <rect x="70" y="139" width="70" height="6" rx="3"/>
+  </g>
+</svg>
