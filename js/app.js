@@ -4,6 +4,8 @@
    ========================================================= */
 
 const app = document.getElementById("app");
+const TITULO_BASE = "Derecho y Legislación en Informática";
+const PATRON_UNIDAD = /^u(\d+)(?:-(\d+))?$/;
 
 function esc(valor) {
   return String(valor)
@@ -22,7 +24,47 @@ function ir(hash) {
   location.hash = hash;
 }
 
+function setTitulo(texto) {
+  document.title = texto ? `${texto} · ${TITULO_BASE}` : TITULO_BASE;
+}
+
+function resaltar(texto, termino) {
+  if (!termino) return esc(texto);
+
+  const indice = texto.toLowerCase().indexOf(termino.toLowerCase());
+  if (indice === -1) return esc(texto);
+
+  const fin = indice + termino.length;
+
+  return (
+    esc(texto.slice(0, indice)) +
+    `<mark>${esc(texto.slice(indice, fin))}</mark>` +
+    esc(texto.slice(fin))
+  );
+}
+
+function contenidoBuscable(unidad) {
+  return [
+    unidad.t,
+    unidad.d,
+    unidad.main_title,
+    ...unidad.main,
+    ...unidad.keys.flat(),
+    ...unidad.s.flat()
+  ].join(" ").toLowerCase();
+}
+
+function enfocarTitulo() {
+  const titulo = app.querySelector("h1");
+  if (titulo) {
+    titulo.setAttribute("tabindex", "-1");
+    titulo.focus({ preventScroll: true });
+  }
+}
+
 function mostrarInicio() {
+  setTitulo("");
+
   app.innerHTML = `
     <section class="hero">
       <svg class="hero-decoration" viewBox="0 0 1000 700" aria-hidden="true">
@@ -45,35 +87,20 @@ function mostrarInicio() {
           Explora las siete unidades con explicaciones del tema principal,
           conceptos clave, subtemas e información jurídica relacionada.
         </p>
-        <a href="#temas">
-          <button class="btn" type="button">Ver unidades</button>
-        </a>
+        <a class="btn" href="#temas">Ver unidades</a>
       </div>
     </section>
   `;
-}
 
-function contenidoBuscable(unidad) {
-  return [
-    unidad.t,
-    unidad.d,
-    unidad.main_title,
-    ...unidad.main,
-    ...unidad.keys.flat(),
-    ...unidad.s.flat()
-  ].join(" ").toLowerCase();
+  window.scrollTo(0, 0);
 }
 
 function mostrarLista(filtro = "") {
-  const termino = filtro.trim().toLowerCase();
-
-  const resultados = UNIDADES.filter((unidad) =>
-    contenidoBuscable(unidad).includes(termino)
-  );
+  setTitulo("Temas");
 
   app.innerHTML = `
     <div class="top">
-      <button class="back" id="btn-inicio" type="button">← Inicio</button>
+      <a class="back" href="#">← Inicio</a>
 
       <input
         id="buscador"
@@ -86,54 +113,59 @@ function mostrarLista(filtro = "") {
     </div>
 
     <div class="wrap">
-      <div class="unit-header">
+      <header class="unit-header">
         <div class="tag">Contenido de la materia</div>
-        <h2>Temas de interés</h2>
+        <h1 class="page-title">Temas de interés</h1>
         <p class="lead">
           Selecciona una unidad para estudiar primero la idea principal y
           después sus subtemas.
         </p>
-      </div>
+      </header>
 
-      <div class="grid">
-        ${
-          resultados.length
-            ? resultados.map((unidad) => `
-                <article class="card" data-unidad="${unidad.n}" tabindex="0" role="button">
-                  <img src="${unidad.image}" alt="Ilustración de ${esc(unidad.t)}">
-                  <div class="card-body">
-                    <h3>Unidad ${unidad.n}. ${esc(unidad.t)}</h3>
-                    <small>${esc(unidad.h)}</small>
-                  </div>
-                </article>
-              `).join("")
-            : `<p class="empty">No se encontraron coincidencias.</p>`
-        }
-      </div>
+      <p class="result-count" id="result-count" aria-live="polite"></p>
+
+      <div class="grid" id="grid"></div>
     </div>
   `;
 
-  document.getElementById("btn-inicio").addEventListener("click", () => ir(""));
-
   const buscador = document.getElementById("buscador");
-  buscador.focus();
-  buscador.setSelectionRange(filtro.length, filtro.length);
+  const grid = document.getElementById("grid");
+  const contador = document.getElementById("result-count");
 
+  function renderResultados(valor) {
+    const termino = valor.trim().toLowerCase();
+    const resultados = UNIDADES.filter((unidad) =>
+      contenidoBuscable(unidad).includes(termino)
+    );
+
+    contador.textContent =
+      resultados.length === 1
+        ? "1 unidad encontrada"
+        : `${resultados.length} unidades encontradas`;
+
+    grid.innerHTML = resultados.length
+      ? resultados.map((unidad) => `
+          <a class="card" href="#u${unidad.n}">
+            <img src="${esc(unidad.image)}" alt="Ilustración de ${esc(unidad.t)}" loading="lazy">
+            <div class="card-body">
+              <h2>Unidad ${unidad.n}. ${resaltar(unidad.t, termino)}</h2>
+              <small>${resaltar(unidad.h, termino)}</small>
+            </div>
+          </a>
+        `).join("")
+      : `<p class="empty">No se encontraron coincidencias.</p>`;
+  }
+
+  renderResultados(filtro);
+
+  let temporizador;
   buscador.addEventListener("input", (event) => {
-    mostrarLista(event.target.value);
+    const valor = event.target.value;
+    clearTimeout(temporizador);
+    temporizador = setTimeout(() => renderResultados(valor), 140);
   });
 
-  document.querySelectorAll("[data-unidad]").forEach((card) => {
-    const abrir = () => ir(`u${card.dataset.unidad}`);
-
-    card.addEventListener("click", abrir);
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        abrir();
-      }
-    });
-  });
+  window.scrollTo(0, 0);
 }
 
 function mostrarUnidad(numero) {
@@ -144,25 +176,27 @@ function mostrarUnidad(numero) {
     return;
   }
 
+  setTitulo(`Unidad ${unidad.n}. ${unidad.t}`);
+
   app.innerHTML = `
     <div class="top">
-      <button class="back" id="btn-temas" type="button">← Temas</button>
+      <a class="back" href="#temas">← Temas</a>
       <span class="crumb">Unidad ${unidad.n}</span>
     </div>
 
     <div class="wrap">
       <header class="unit-header">
         <div class="tag">Unidad ${unidad.n} · ${esc(unidad.h)}</div>
-        <h2>${esc(unidad.t)}</h2>
+        <h1 class="page-title">${esc(unidad.t)}</h1>
         <p class="lead">${esc(unidad.d)}</p>
       </header>
 
       <div class="hero-image">
-        <img src="${unidad.image}" alt="Ilustración relacionada con ${esc(unidad.t)}">
+        <img src="${esc(unidad.image)}" alt="Ilustración relacionada con ${esc(unidad.t)}">
       </div>
 
       <section class="info-section">
-        <h3>${esc(unidad.main_title)}</h3>
+        <h2>${esc(unidad.main_title)}</h2>
         ${unidad.main.map((parrafo) => `<p>${esc(parrafo)}</p>`).join("")}
 
         <div class="key-grid">
@@ -175,39 +209,27 @@ function mostrarUnidad(numero) {
         </div>
       </section>
 
-      <h3 class="section-title">Subtemas</h3>
+      <h2 class="section-title">Subtemas</h2>
 
       <div class="subs">
         ${unidad.s.map(([titulo], index) => `
-          <button
-            class="sub"
-            type="button"
-            data-subtema="${index + 1}"
-          >
+          <a class="sub" href="#u${unidad.n}-${index + 1}">
             <b>${unidad.n}.${index + 1}</b>
             <span>${esc(titulo)}</span>
-          </button>
+          </a>
         `).join("")}
       </div>
 
       <section class="sources">
-        <h3>Fuentes de consulta</h3>
+        <h2>Fuentes de consulta</h2>
         ${unidad.sources.map(([nombre, url]) => `
-          <a href="${url}" target="_blank" rel="noopener noreferrer">
+          <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">
             ${esc(nombre)}
           </a>
         `).join("")}
       </section>
     </div>
   `;
-
-  document.getElementById("btn-temas").addEventListener("click", () => ir("temas"));
-
-  document.querySelectorAll("[data-subtema]").forEach((button) => {
-    button.addEventListener("click", () => {
-      ir(`u${unidad.n}-${button.dataset.subtema}`);
-    });
-  });
 
   window.scrollTo(0, 0);
 }
@@ -225,86 +247,97 @@ function mostrarSubtema(numero, indice) {
   const anterior = indice > 1;
   const siguiente = indice < unidad.s.length;
 
+  setTitulo(`${unidad.n}.${indice} ${titulo}`);
+
   app.innerHTML = `
     <div class="top">
-      <button class="back" id="btn-unidad" type="button">
-        ← Unidad ${unidad.n}
-      </button>
+      <a class="back" href="#u${unidad.n}">← Unidad ${unidad.n}</a>
       <span class="crumb">${unidad.n}.${indice} ${esc(titulo)}</span>
     </div>
 
     <div class="wrap">
       <div class="tag">Unidad ${unidad.n} · ${esc(unidad.t)}</div>
-      <h2>${unidad.n}.${indice} ${esc(titulo)}</h2>
+      <h1 class="page-title">${unidad.n}.${indice} ${esc(titulo)}</h1>
 
       <div class="hero-image">
-        <img src="${unidad.image}" alt="Ilustración de ${esc(unidad.t)}">
+        <img src="${esc(unidad.image)}" alt="Ilustración de ${esc(unidad.t)}">
       </div>
 
       <section class="info-section topic-box">
-        <h3>¿De qué trata?</h3>
+        <h2>¿De qué trata?</h2>
         <p class="topic-description">${esc(descripcion)}</p>
       </section>
 
-      <div class="nav">
+      <nav class="nav" aria-label="Navegación entre subtemas">
         ${
           anterior
-            ? `<button class="back" id="btn-anterior" type="button">← Anterior</button>`
+            ? `<a class="back" href="#u${unidad.n}-${indice - 1}">← Anterior</a>`
             : `<span></span>`
         }
 
         ${
           siguiente
-            ? `<button class="back" id="btn-siguiente" type="button">Siguiente →</button>`
+            ? `<a class="back" href="#u${unidad.n}-${indice + 1}">Siguiente →</a>`
             : `<span></span>`
         }
-      </div>
+      </nav>
     </div>
   `;
-
-  document.getElementById("btn-unidad").addEventListener("click", () => {
-    ir(`u${unidad.n}`);
-  });
-
-  if (anterior) {
-    document.getElementById("btn-anterior").addEventListener("click", () => {
-      ir(`u${unidad.n}-${indice - 1}`);
-    });
-  }
-
-  if (siguiente) {
-    document.getElementById("btn-siguiente").addEventListener("click", () => {
-      ir(`u${unidad.n}-${indice + 1}`);
-    });
-  }
 
   window.scrollTo(0, 0);
 }
 
+let primeraCarga = true;
+
 function manejarRuta() {
   const hash = location.hash.slice(1);
 
+  if (hash === "app") {
+    app.focus({ preventScroll: true });
+    return;
+  }
+
   if (hash === "temas") {
     mostrarLista();
-    return;
-  }
-
-  const match = hash.match(/^u([1-7])(?:-(\d+))?$/);
-
-  if (!match) {
-    mostrarInicio();
-    return;
-  }
-
-  const numero = Number(match[1]);
-  const indice = match[2] ? Number(match[2]) : null;
-
-  if (indice) {
-    mostrarSubtema(numero, indice);
   } else {
-    mostrarUnidad(numero);
+    const match = hash.match(PATRON_UNIDAD);
+
+    if (!match) {
+      mostrarInicio();
+    } else {
+      const numero = Number(match[1]);
+      const indice = match[2] ? Number(match[2]) : null;
+
+      if (indice) {
+        mostrarSubtema(numero, indice);
+      } else {
+        mostrarUnidad(numero);
+      }
+    }
   }
+
+  if (!primeraCarga) {
+    enfocarTitulo();
+  }
+
+  primeraCarga = false;
 }
 
-window.addEventListener("hashchange", manejarRuta);
-manejarRuta();
+function iniciar() {
+  if (typeof UNIDADES === "undefined" || !Array.isArray(UNIDADES) || !UNIDADES.length) {
+    app.innerHTML = `
+      <div class="wrap">
+        <p class="empty">
+          No se pudo cargar el contenido. Verifica que <code>js/data.js</code>
+          esté disponible.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  window.addEventListener("hashchange", manejarRuta);
+  manejarRuta();
+}
+
+iniciar();
