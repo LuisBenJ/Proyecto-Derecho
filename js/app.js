@@ -148,14 +148,14 @@ function mostrarInicio() {
   app.innerHTML = `
     <section class="hero">
       <svg class="hero-decoration" viewBox="0 0 1000 700" aria-hidden="true">
-        <g fill="none" stroke="#9cc5ff" stroke-width="2" opacity=".35">
+        <g fill="none" stroke="#3568d4" stroke-width="2" opacity=".22">
           <path d="M0 120h190l45 45h160M0 350h140l60-60h240M1000 170H790l-50 50H570M1000 470H820l-70-70H570M0 610h230l55-55h170"></path>
           <circle cx="235" cy="165" r="7"></circle>
           <circle cx="400" cy="165" r="7"></circle>
           <circle cx="500" cy="290" r="7"></circle>
           <circle cx="570" cy="400" r="7"></circle>
         </g>
-        <g transform="translate(500 350)" fill="none" stroke="#dbeaff" stroke-width="5" opacity=".55">
+        <g transform="translate(500 350)" fill="none" stroke="#a86a1f" stroke-width="5" opacity=".28">
           <path d="M0-130v230M-70 100h140M-120-65h240M-120-65l-42 78h84zM120-65l-42 78h84z"></path>
         </g>
       </svg>
